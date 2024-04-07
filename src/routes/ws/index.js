@@ -1,4 +1,5 @@
-export const websocketHandler = async (request, state) => {
+export const websocketHandler = async (request, env, state) => {
+  console.log(request)
   const upgradeHeader = request.headers.get("Upgrade")
   if (!upgradeHeader || upgradeHeader !== "websocket") {
     return new Response("Durable Object expected Upgrade: websocket", { status: 426 })

@@ -16,66 +16,99 @@ function getUserName(msg) {
     return msg.member.nick ? msg.member.nick : msg.member.user.global_name
 }
 
-async function handlePost(request) {
+function getCommandValue(msg) {
+    return msg.data.options ? msg.data.options[0].value : false
+}
+
+function sendToBannerBot(message, state) {
+    try {
+        const websockets = state.getWebSockets()
+        const payload = {
+            command: message.data.name,
+            value: getCommandValue(message),
+            issued_by: getUserName(message)
+        }
+        for (const ws of websockets) {
+            ws.send(JSON.stringify(payload))
+        }
+    } catch (e) {
+        console.log(e)
+    }
+}
+
+async function handlePost(request, env, state) {
     try {
         const message = await request.json()
         if (message.type === InteractionType.PING) {
             // The `PING` message is used during the initial webhook handshake, and is
             // required to configure the webhook in the developer portal.
-            console.log("Handling Ping request");
+            console.log("Handling Ping request")
             return new SERIALIZE({
                 type: InteractionResponseType.PONG,
-            });
+            })
         }
 
         console.log("MSG: ", message)
         console.log("DATA: ", message.data)
 
         switch(message.data.name) {
+            case "bot_status":
+                    sendToBannerBot(message, state)
+                    return new SERIALIZE({
+                        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+                        data: {
+                            content: `Banner Bot status: pending... \nIssuer = ${getUserName(message)}`,
+                        },
+                    })
             case "enable_bot":
+                    sendToBannerBot(message, state)
                     return new SERIALIZE({
                         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
                         data: {
-                            content: `Banner Bot is Online. \nIssuer = ${getUserName(message)}`,
+                            content: `Enabling bot... \nIssuer = ${getUserName(message)}`,
                         },
-                    });
+                    })
             case "disable_bot":
+                    sendToBannerBot(message, state)
                     return new SERIALIZE({
                         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
                         data: {
-                            content: `Banner Bot Instance stopped. \nIssuer = ${getUserName(message)}`,
+                            content: `Disabling bot... \nIssuer = ${getUserName(message)}`,
                         },
-                    });
+                    })
             case "change_ship":
+                    sendToBannerBot(message, state)
                     return new SERIALIZE({
                         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
                         data: {
-                            content: `Banner Bot changed to Ship ${""}. \nIssuer = ${getUserName(message)}`,
+                            content: `Changing to Ship ${getCommandValue(message)}. \nIssuer = ${getUserName(message)}`,
                         },
-                    });
+                    })
             case "change_block":
+                    sendToBannerBot(message, state)
                     return new SERIALIZE({
                         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
                         data: {
-                            content: `Banner Bot changed to Block ${""}. \nIssuer = ${getUserName(message)}`,
+                            content: `Changing to Block ${getCommandValue(message)}. \nIssuer = ${getUserName(message)}`,
                         },
-                    });
+                    })
             case "change_lobby":
+                    sendToBannerBot(message, state)
                     return new SERIALIZE({
                         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
                         data: {
-                            content: `Banner Bot changed to Lobby ${""}. \nIssuer = ${getUserName(message)}`,
+                            content: `Changing to Lobby ${getCommandValue(message)}. \nIssuer = ${getUserName(message)}`,
                         },
-                    });
+                    })
             default:
-                return new SERIALIZE({ error: "Unknown Type" }, { status: 400 });
+                return new SERIALIZE({ error: "Unknown Type" }, { status: 400 })
         }
     } catch (err) {
         return new SERIALIZE({ error: err.toString() }, { status: 400 })
     }
 }
 
-export async function discordHandler(request, env) {
+export async function discordHandler(request, env, state) {
     // Using the incoming headers, verify this request actually came from discord.
     const signature = request.headers.get("x-signature-ed25519")
     const timestamp = request.headers.get("x-signature-timestamp")
@@ -94,7 +127,7 @@ export async function discordHandler(request, env) {
     
     switch(request.method) {
         case "POST":
-            return handlePost(request)
+            return handlePost(request, env, state)
         default:
             return new Response("Not found", { status: 404 })
     }
