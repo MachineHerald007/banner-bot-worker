@@ -1,4 +1,4 @@
-
+import { handle } from "./baseRouteHandler.js"
 import { websocketHandler } from "./ws/index.js"
 import { discordHandler } from "./discord/index.js"
 
@@ -7,7 +7,7 @@ export async function httpRequestHandler(request, env, state) {
       const url = new URL(request.url)
       switch (url.pathname) {
             case "/":
-                return new Response(null, { status: 200 })
+                return handle(request, env, state)
             case "/interactions":
                 return discordHandler(request, env, state)
             case "/ws":

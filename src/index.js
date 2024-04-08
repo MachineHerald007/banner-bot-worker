@@ -18,10 +18,17 @@ export class BannerBotWorker {
     } else {
       ws.send(JSON.stringify({ error: "Unknown message received", timestamp: new Date() }))
     }
+
+    if (message === "bot_status") {}
+    if (message === "enabled_bot") {}
+    if (message === "disabled_bot") {}
+    if (message === "changed_ship") {}
+    if (message === "changed_block") {}
+    if (message === "changed_lobby") {}
   }
 
   async webSocketClose(ws, code, reason, wasClean) {
-    ws.close(code, "Durable Object is closing WebSocket");
+    ws.close(code, "Durable Object is closing WebSocket")
   }
 }
 
