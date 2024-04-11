@@ -11,7 +11,6 @@ class SERIALIZE extends Response {
 }
 
 export async function handle(request, env, state) {
-    // Return a HTTP 403 (Forbidden) if the auth key is invalid/incorrect/misconfigured
     let authToken = request.headers.get("Authorization") || ""
     let encoder = new TextEncoder()
 
@@ -72,6 +71,9 @@ async function handleBotLogin(request, env, state) {
         }),
         headers
     })
+    const stmt = env.DB.prepare("UPDATE bot SET loggedIntoEphinea=1, state_id=7 WHERE id=1")
+    const values = await stmt.run()
+
     return new SERIALIZE(response.body, {
         status: response.status,
         statusText: response.statusText,
@@ -89,6 +91,69 @@ async function handleBotLogout(request, env, state) {
         }),
         headers
     })
+    const stmt = env.DB.prepare("UPDATE bot SET loggedIntoEphinea=0, state_id=9 WHERE id=1")
+    const values = await stmt.run()
+
+    return new SERIALIZE(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers
+    })
+}
+
+async function handleBotChangedShip(request, env, state) {
+    const url = `${env.DISCORD_API_ENDPOINT}/${env.COMMAND_CENTER_WEBHOOK_ID}/${env.COMMAND_CENTER_WEBHOOK_TOKEN}`
+    const headers = new Headers({"Content-Type": "application/json"})
+    const response = await fetch(url, {
+        method: "POST",
+        body: JSON.stringify({
+            content: "Banner Bot successfully changed Ship"
+        }),
+        headers
+    })
+    const stmt = env.DB.prepare("UPDATE bot SET state_id=7 WHERE id=1")
+    const values = await stmt.run()
+    
+    return new SERIALIZE(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers
+    })
+}
+
+async function handleBotChangedBlock(request, env, state) {
+    const url = `${env.DISCORD_API_ENDPOINT}/${env.COMMAND_CENTER_WEBHOOK_ID}/${env.COMMAND_CENTER_WEBHOOK_TOKEN}`
+    const headers = new Headers({"Content-Type": "application/json"})
+    const response = await fetch(url, {
+        method: "POST",
+        body: JSON.stringify({
+            content: "Banner Bot successfully changed Block"
+        }),
+        headers
+    })
+    const stmt = env.DB.prepare("UPDATE bot SET state_id=7 WHERE id=1")
+    const values = await stmt.run()
+    
+    return new SERIALIZE(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers
+    })
+}
+
+async function handleBotChangedLobby(request, env, state) {
+    const url = `${env.DISCORD_API_ENDPOINT}/${env.COMMAND_CENTER_WEBHOOK_ID}/${env.COMMAND_CENTER_WEBHOOK_TOKEN}`
+    const headers = new Headers({"Content-Type": "application/json"})
+    const response = await fetch(url, {
+        method: "POST",
+        body: JSON.stringify({
+            content: "Banner Bot successfully changed Lobby"
+        }),
+        headers
+    })
+    const stmt = env.DB.prepare("UPDATE bot SET state_id=7 WHERE id=1")
+    const values = await stmt.run()
+    
     return new SERIALIZE(response.body, {
         status: response.status,
         statusText: response.statusText,
@@ -119,11 +184,15 @@ async function handlePost(request, env, state) {
         //parse message and send to queue
         switch (json.messages[0].msg) {
             case "LOGGED_IN":
-                console.log("CASE IS LOGGED IN")
                 return handleBotLogin(request, env, state)
             case "LOGGED_OUT":
-                console.log("CASE IS LOGGED OUT")
                 return handleBotLogout(request, env, state)
+            case "CHANGED_SHIP":
+                return handleBotChangedShip(request, env, state)
+            case "CHANGED_BLOCK":
+                return handleBotChangedBlock(request, env, state)
+            case "CHANGED_LOBBY":
+                return handleBotChangedLobby(request, env, state)
             default:
                 return new SERIALIZE(JSON.stringify(json), {
                     headers: {

@@ -36,6 +36,212 @@ function sendToBannerBot(message, state) {
     }
 }
 
+async function getBotState(env, message, state) {
+    try {
+        const stmt = env.DB.prepare("SELECT * FROM bot WHERE id=1")
+        const values = await stmt.first()
+        const status = values.loggedIntoEphinea == 1 ? "Logged into Ephinea" : "Logged out of Ephinea"
+
+        sendToBannerBot(message, state)
+        return new SERIALIZE({
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: `Banner Bot status: ${status}... \nIssuer = ${getUserName(message)}`,
+            },
+        })
+    } catch (e) {
+        return new SERIALIZE({
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: `Banner Bot status: error can't get status... \nIssuer = ${getUserName(message)}`,
+            },
+        })
+    }
+}
+
+async function enableBot(env, message, state) {
+    try {
+        const stmt = env.DB.prepare("SELECT * FROM bot WHERE id=1")
+        const values = await stmt.first()
+
+        if (values.state_id == 10) {
+            return new SERIALIZE({
+                type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+                data: {
+                    content: `Bot VM instance is turned off!... \nIssuer = ${getUserName(message)}`,
+                },
+            })
+        }
+
+        if
+        (
+            values.state_id == 1     ||
+            values.loggedIntoEphinea
+        )
+        {
+            return new SERIALIZE({
+                type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+                data: {
+                    content: `Bot is already enabled and logged into Ephinea!... \nIssuer = ${getUserName(message)}`,
+                },
+            })
+        }
+
+        sendToBannerBot(message, state)
+        return new SERIALIZE({
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: `VM is online and bot is logging into Ephinea... \nIssuer = ${getUserName(message)}`,
+            },
+        })
+    } catch (e) {
+        return new SERIALIZE({
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: `Error enabling bot! \nIssuer = ${getUserName(message)}`,
+            },
+        }) 
+    }
+}
+
+async function disableBot(env, message, state) {
+    try {
+        const stmt = env.DB.prepare("SELECT * FROM bot WHERE id=1")
+        const values = await stmt.first()
+
+        sendToBannerBot(message, state)
+        return new SERIALIZE({
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: `Disabling bot... \nIssuer = ${getUserName(message)}`,
+            },
+        })
+    } catch (e) {
+        return new SERIALIZE({
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: `Error in disabling bot... \nIssuer = ${getUserName(message)}`,
+            },
+        }) 
+    }
+}
+
+async function changeShip(env, message, state) {
+    try {
+        const sel_stmt = env.DB.prepare("SELECT * FROM bot WHERE id=1")
+        const values = await sel_stmt.first()
+
+        if
+        (
+            values.state_id !== 7 &&
+            values.state_id !== 8
+        )
+        {
+            return new SERIALIZE({
+                type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+                data: {
+                    content: `[DENIED]: Need to wait for Bot to finish executing current command before issuing a new one. \nIssuer = ${getUserName(message)}`,
+                },
+            })
+        }
+
+        const up_stmt = env.DB.prepare("UPDATE bot SET state_id=3 WHERE id=1")
+        const up_res = await up_stmt.run()
+
+        sendToBannerBot(message, state)
+        return new SERIALIZE({
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: `[ACCEPTED]: Changing to Ship ${getCommandValue(message)}. \nIssuer = ${getUserName(message)}`,
+            },
+        })
+    } catch (e) {
+        return new SERIALIZE({
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: `Error in changing Ship... \nIssuer = ${getUserName(message)}`,
+            },
+        }) 
+    }
+}
+
+async function changeBlock(env, message, state) {
+    try {
+        const stmt = env.DB.prepare("SELECT * FROM bot")
+        const values = await stmt.first()
+
+        if
+        (
+            values.state_id !== 7 &&
+            values.state_id !== 8
+        )
+        {
+            return new SERIALIZE({
+                type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+                data: {
+                    content: `[DENIED]: Need to wait for Bot to finish executing current command before issuing a new one. \nIssuer = ${getUserName(message)}`,
+                },
+            })
+        }
+
+        const up_stmt = env.DB.prepare("UPDATE bot SET state_id=4 WHERE id=1")
+        const up_res = await up_stmt.run()
+
+        sendToBannerBot(message, state)
+        return new SERIALIZE({
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: `[ACCEPTED]: Changing to Block ${getCommandValue(message)}. \nIssuer = ${getUserName(message)}`,
+            },
+        })
+    } catch (e) {
+        return new SERIALIZE({
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: `Error in changing Block ${getCommandValue(message)}. \nIssuer = ${getUserName(message)}`,
+            },
+        }) 
+    }
+}
+
+async function changeLobby(env, message, state) {
+    try {
+        const stmt = env.DB.prepare("SELECT * FROM bot WHERE id=1")
+        const values = await stmt.first()
+
+        if
+        (
+            values.state_id !== 8 &&
+            values.state_id !== 7
+        )
+        {
+            return new SERIALIZE({
+                type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+                data: {
+                    content: `[DENIED]: Need to wait for Bot to finish executing current command before issuing a new one. \nIssuer = ${getUserName(message)}`,
+                },
+            })
+        }
+        const up_stmt = env.DB.prepare("UPDATE bot SET state_id=5")
+        const up_res = await up_stmt.run()
+
+        sendToBannerBot(message, state)
+        return new SERIALIZE({
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: `[ACCEPTED]: Changing to Lobby${getCommandValue(message)} \nIssuer = ${getUserName(message)}`,
+            },
+        })
+    } catch (e) {
+        return new SERIALIZE({
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: `Error in changing Lobby... \nIssuer = ${getUserName(message)}`,
+            },
+        }) 
+    }
+}
+
 async function handlePost(request, env, state) {
     try {
         const message = await request.json()
@@ -48,60 +254,21 @@ async function handlePost(request, env, state) {
             })
         }
 
-        console.log("MSG: ", message)
-        console.log("DATA: ", message.data)
-
         switch(message.data.name) {
             case "bot_status":
-                    sendToBannerBot(message, state)
-                    return new SERIALIZE({
-                        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-                        data: {
-                            content: `Banner Bot status: pending... \nIssuer = ${getUserName(message)}`,
-                        },
-                    })
+                    return getBotState(env, message, state)
             case "enable_bot":
-                    sendToBannerBot(message, state)
-                    return new SERIALIZE({
-                        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-                        data: {
-                            content: `Enabling bot... \nIssuer = ${getUserName(message)}`,
-                        },
-                    })
+                    return enableBot(env, message, state)
             case "disable_bot":
-                    sendToBannerBot(message, state)
-                    return new SERIALIZE({
-                        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-                        data: {
-                            content: `Disabling bot... \nIssuer = ${getUserName(message)}`,
-                        },
-                    })
+                    return disableBot(env, message, state)
             case "change_ship":
-                    sendToBannerBot(message, state)
-                    return new SERIALIZE({
-                        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-                        data: {
-                            content: `Changing to Ship ${getCommandValue(message)}. \nIssuer = ${getUserName(message)}`,
-                        },
-                    })
+                    return changeShip(env, message, state)
             case "change_block":
-                    sendToBannerBot(message, state)
-                    return new SERIALIZE({
-                        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-                        data: {
-                            content: `Changing to Block ${getCommandValue(message)}. \nIssuer = ${getUserName(message)}`,
-                        },
-                    })
+                    return changeBlock(env, message, state)
             case "change_lobby":
-                    sendToBannerBot(message, state)
-                    return new SERIALIZE({
-                        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-                        data: {
-                            content: `Changing to Lobby ${getCommandValue(message)}. \nIssuer = ${getUserName(message)}`,
-                        },
-                    })
+                    return changeLobby(env, message, state)
             default:
-                return new SERIALIZE({ error: "Unknown Type" }, { status: 400 })
+                    return new SERIALIZE({ error: "Unknown Type" }, { status: 400 })
         }
     } catch (err) {
         return new SERIALIZE({ error: err.toString() }, { status: 400 })
